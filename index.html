@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Oat Milk Coffee Japan</title>
+
+  <link
+    href="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
+
+  <script src="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    .maplibregl-popup-content {
+      font-family: Arial, sans-serif;
+      min-width: 180px;
+    }
+
+    .cafe-name {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .cafe-area {
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script>
+  const cafes = [
+    {
+      name: "Foret coffee",
+      neighbourhood: "Zenkoji / Monzen",
+      latitude: 36.653782,
+      longitude: 138.187489
+    },
+    {
+      name: "Alps coffee lAb.",
+      neighbourhood: "Nakamachi",
+      latitude: 36.234132,
+      longitude: 137.970238
+    },
+    {
+      name: "ODDO coffee",
+      neighbourhood: "Nagano Station / Minami-Ishidocho",
+      latitude: 36.644632,
+      longitude: 138.186324
+    },
+    {
+      name: "Hangout coffee",
+      neighbourhood: "Honmachi",
+      latitude: 36.233446,
+      longitude: 137.968894
+    },
+    {
+      name: "Buthtub",
+      neighbourhood: "Honmachi",
+      latitude: 35.359342,
+      longitude: 136.619383
+    }
+  ];
+
+  const map = new maplibregl.Map({
+    container: "map",
+
+    style: "https://tiles.openfreemap.org/styles/liberty",
+
+    center: [137.8, 36.1],
+
+    zoom: 6
+  });
+
+  map.addControl(
+    new maplibregl.NavigationControl(),
+    "top-right"
+  );
+
+  cafes.forEach(cafe => {
+
+    const popup = new maplibregl.Popup({
+      offset: 25
+    }).setHTML(`
+      <div class="cafe-name">${cafe.name}</div>
+      <div class="cafe-area">${cafe.neighbourhood}</div>
+    `);
+
+    new maplibregl.Marker()
+      .setLngLat([
+        cafe.longitude,
+        cafe.latitude
+      ])
+      .setPopup(popup)
+      .addTo(map);
+
+  });
+</script>
+
+</body>
+</html>
