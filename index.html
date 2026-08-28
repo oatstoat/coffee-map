@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Oat Milk Coffee Japan</title>
 
+  <!-- MapLibre -->
   <link
     href="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.css"
     rel="stylesheet"
-  />
+  >
 
   <script src="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Papa Parse: reads the CSV safely -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.5.3/papaparse.min.js"></script>
 
   <style>
     html,
@@ -33,99 +37,136 @@
     }
 
     .cafe-name {
-      font-weight: bold;
       font-size: 16px;
+      font-weight: bold;
       margin-bottom: 5px;
     }
 
     .cafe-area {
       font-size: 13px;
-      margin-bottom: 8px;
     }
   </style>
 </head>
 
 <body>
 
-<div id="map"></div>
+  <div id="map"></div>
 
-<script>
-  const cafes = [
-    {
-      name: "Foret coffee",
-      neighbourhood: "Zenkoji / Monzen",
-      latitude: 36.653782,
-      longitude: 138.187489
-    },
-    {
-      name: "Alps coffee lAb.",
-      neighbourhood: "Nakamachi",
-      latitude: 36.234132,
-      longitude: 137.970238
-    },
-    {
-      name: "ODDO coffee",
-      neighbourhood: "Nagano Station / Minami-Ishidocho",
-      latitude: 36.644632,
-      longitude: 138.186324
-    },
-    {
-      name: "Hangout coffee",
-      neighbourhood: "Honmachi",
-      latitude: 36.233446,
-      longitude: 137.968894
-    },
-    {
-      name: "Buthtub",
-      neighbourhood: "Honmachi",
-      latitude: 35.359342,
-      longitude: 136.619383
-    }
-  ];
+  <script>
 
-  const map = new maplibregl.Map({
-    container: "map",
+    // Create map
+    const map = new maplibregl.Map({
+      container: "map",
+      style: "https://tiles.openfreemap.org/styles/liberty",
+      center: [137.8, 36.1],
+      zoom: 6
+    });
 
-    style: "https://tiles.openfreemap.org/styles/liberty",
 
-    center: [137.8, 36.1],
+    // Zoom controls
+    map.addControl(
+      new maplibregl.NavigationControl(),
+      "top-right"
+    );
 
-    zoom: 6
-  });
 
-  map.addControl(
-    new maplibregl.NavigationControl(),
-    "top-right"
-  );
-map.addControl(
-  new maplibregl.GeolocateControl({
-    positionOptions: {
-      enableHighAccuracy: true
-    },
-    trackUserLocation: true,
-    showUserHeading: true
-  }),
-  "top-right"
-);
-  cafes.forEach(cafe => {
+    // User location control
+    map.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+      }),
+      "top-right"
+    );
 
-    const popup = new maplibregl.Popup({
-      offset: 25
-    }).setHTML(`
-      <div class="cafe-name">${cafe.name}</div>
-      <div class="cafe-area">${cafe.neighbourhood}</div>
-    `);
 
-    new maplibregl.Marker()
-      .setLngLat([
-        cafe.longitude,
-        cafe.latitude
-      ])
-      .setPopup(popup)
-      .addTo(map);
+    // Load cafe data from cafes.csv
+    Papa.parse("cafes.csv", {
 
-  });
-</script>
+      download: true,
+
+      header: true,
+
+      skipEmptyLines: true,
+
+      complete: function(results) {
+
+        const cafes = results.data;
+
+        console.log("Cafes loaded:", cafes);
+
+
+        cafes.forEach(function(cafe) {
+
+          const latitude = parseFloat(cafe["Latitude"]);
+          const longitude = parseFloat(cafe["Longitude"]);
+
+          // Ignore records without valid coordinates
+          if (
+            Number.isNaN(latitude) ||
+            Number.isNaN(longitude)
+          ) {
+            return;
+          }
+
+
+          // Ignore records marked inactive
+          const active = String(cafe["Active"] || "")
+            .trim()
+            .toLowerCase();
+
+          if (
+            active === "false" ||
+            active === "no" ||
+            active === "0"
+          ) {
+            return;
+          }
+
+
+          // Create popup
+          const popup = new maplibregl.Popup({
+            offset: 25
+          }).setHTML(`
+            <div class="cafe-name">
+              ${cafe["Name"] || ""}
+            </div>
+
+            <div class="cafe-area">
+              ${cafe["Neighbourhood"] || ""}
+            </div>
+          `);
+
+
+          // Create marker
+          new maplibregl.Marker()
+            .setLngLat([
+              longitude,
+              latitude
+            ])
+            .setPopup(popup)
+            .addTo(map);
+
+        });
+
+      },
+
+
+      error: function(error) {
+
+        console.error(
+          "Could not load cafes.csv:",
+          error
+        );
+
+      }
+
+    });
+
+  </script>
 
 </body>
 </html>
