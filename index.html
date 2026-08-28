@@ -84,7 +84,7 @@
 
 
     // Load cafe data from cafes.csv
-    Papa.parse("cafes.csv", {
+    Papa.parse("cafes.csv?v=" + Date.now(), {
 
       download: true,
 
