@@ -6,15 +6,12 @@
 
   <title>Oat Milk Coffee Japan</title>
 
-  <!-- MapLibre -->
   <link
     href="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.css"
     rel="stylesheet"
   >
 
   <script src="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.js"></script>
-
-  <!-- Papa Parse: reads the CSV safely -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.5.3/papaparse.min.js"></script>
 
   <style>
@@ -33,7 +30,7 @@
 
     .maplibregl-popup-content {
       font-family: Arial, sans-serif;
-      min-width: 180px;
+      min-width: 200px;
     }
 
     .cafe-name {
@@ -44,6 +41,14 @@
 
     .cafe-area {
       font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .cafe-link {
+      display: inline-block;
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -54,7 +59,6 @@
 
   <script>
 
-    // Create map
     const map = new maplibregl.Map({
       container: "map",
       style: "https://tiles.openfreemap.org/styles/liberty",
@@ -62,15 +66,11 @@
       zoom: 6
     });
 
-
-    // Zoom controls
     map.addControl(
       new maplibregl.NavigationControl(),
       "top-right"
     );
 
-
-    // User location control
     map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: {
@@ -82,29 +82,21 @@
       "top-right"
     );
 
-
-    // Load cafe data from cafes.csv
     Papa.parse("cafes.csv?v=" + Date.now(), {
 
       download: true,
-
       header: true,
-
       skipEmptyLines: true,
 
       complete: function(results) {
 
         const cafes = results.data;
 
-        console.log("Cafes loaded:", cafes);
-
-
         cafes.forEach(function(cafe) {
 
           const latitude = parseFloat(cafe["Latitude"]);
           const longitude = parseFloat(cafe["Longitude"]);
 
-          // Ignore records without valid coordinates
           if (
             Number.isNaN(latitude) ||
             Number.isNaN(longitude)
@@ -112,8 +104,6 @@
             return;
           }
 
-
-          // Ignore records marked inactive
           const active = String(cafe["Active"] || "")
             .trim()
             .toLowerCase();
@@ -126,8 +116,12 @@
             return;
           }
 
+          const recordId = cafe["Softr Record ID"];
 
-          // Create popup
+          const detailUrl =
+            "https://caterina5150.preview.softr.app/item-details?recordId=" +
+            encodeURIComponent(recordId);
+
           const popup = new maplibregl.Popup({
             offset: 25
           }).setHTML(`
@@ -138,10 +132,16 @@
             <div class="cafe-area">
               ${cafe["Neighbourhood"] || ""}
             </div>
+
+            <a
+              class="cafe-link"
+              href="${detailUrl}"
+              target="_top"
+            >
+              View café
+            </a>
           `);
 
-
-          // Create marker
           new maplibregl.Marker()
             .setLngLat([
               longitude,
@@ -149,19 +149,14 @@
             ])
             .setPopup(popup)
             .addTo(map);
-
         });
-
       },
 
-
       error: function(error) {
-
         console.error(
           "Could not load cafes.csv:",
           error
         );
-
       }
 
     });
