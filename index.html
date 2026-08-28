@@ -47,8 +47,8 @@
     .cafe-link {
       display: inline-block;
       font-size: 13px;
-      text-decoration: none;
       font-weight: bold;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -58,19 +58,42 @@
   <div id="map"></div>
 
   <script>
-
     const map = new maplibregl.Map({
       container: "map",
       style: "https://tiles.openfreemap.org/styles/liberty",
       center: [137.8, 36.1],
-      zoom: 6
+      zoom: 6,
+      fadeDuration: 0
     });
 
+    // Force MapLibre to recalculate dimensions after iframe/layout changes.
+    map.on("load", () => {
+      map.resize();
+
+      setTimeout(() => map.resize(), 250);
+      setTimeout(() => map.resize(), 750);
+      setTimeout(() => map.resize(), 1500);
+      setTimeout(() => map.resize(), 3000);
+    });
+
+    window.addEventListener("resize", () => {
+      map.resize();
+    });
+
+    // Watch for size changes caused by the Softr iframe/container.
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+
+    resizeObserver.observe(document.getElementById("map"));
+
+    // Zoom/navigation controls.
     map.addControl(
       new maplibregl.NavigationControl(),
       "top-right"
     );
 
+    // User location control.
     map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: {
@@ -82,18 +105,16 @@
       "top-right"
     );
 
+    // Load café data.
     Papa.parse("cafes.csv?v=" + Date.now(), {
-
       download: true,
       header: true,
       skipEmptyLines: true,
 
       complete: function(results) {
-
         const cafes = results.data;
 
         cafes.forEach(function(cafe) {
-
           const latitude = parseFloat(cafe["Latitude"]);
           const longitude = parseFloat(cafe["Longitude"]);
 
@@ -150,6 +171,11 @@
             .setPopup(popup)
             .addTo(map);
         });
+
+        // Resize again after markers are added.
+        setTimeout(() => map.resize(), 100);
+        setTimeout(() => map.resize(), 500);
+        setTimeout(() => map.resize(), 1500);
       },
 
       error: function(error) {
@@ -158,9 +184,7 @@
           error
         );
       }
-
     });
-
   </script>
 
 </body>
