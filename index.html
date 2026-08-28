@@ -106,7 +106,7 @@
     );
 
     // Load café data.
-    Papa.parse("cafes.csv?v=" + Date.now(), {
+    Papa.parse("cafes.csv", {
       download: true,
       header: true,
       skipEmptyLines: true,
