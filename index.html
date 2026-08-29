@@ -66,7 +66,6 @@
       fadeDuration: 0
     });
 
-    // Force MapLibre to recalculate dimensions after iframe/layout changes.
     map.on("load", () => {
       map.resize();
 
@@ -80,20 +79,19 @@
       map.resize();
     });
 
-    // Watch for size changes caused by the Softr iframe/container.
     const resizeObserver = new ResizeObserver(() => {
       map.resize();
     });
 
-    resizeObserver.observe(document.getElementById("map"));
+    resizeObserver.observe(
+      document.getElementById("map")
+    );
 
-    // Zoom/navigation controls.
     map.addControl(
       new maplibregl.NavigationControl(),
       "top-right"
     );
 
-    // User location control.
     map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: {
@@ -105,7 +103,14 @@
       "top-right"
     );
 
-    // Load café data.
+    // Read ?cafe=... from the URL
+    const urlParams = new URLSearchParams(
+      window.location.search
+    );
+
+    const requestedCafeSlug =
+      urlParams.get("cafe");
+
     Papa.parse("cafes.csv", {
       download: true,
       header: true,
@@ -114,9 +119,15 @@
       complete: function(results) {
         const cafes = results.data;
 
+        let selectedCafe = null;
+        let selectedPopup = null;
+
         cafes.forEach(function(cafe) {
-          const latitude = parseFloat(cafe["Latitude"]);
-          const longitude = parseFloat(cafe["Longitude"]);
+          const latitude =
+            parseFloat(cafe["Latitude"]);
+
+          const longitude =
+            parseFloat(cafe["Longitude"]);
 
           if (
             Number.isNaN(latitude) ||
@@ -125,9 +136,10 @@
             return;
           }
 
-          const active = String(cafe["Active"] || "")
-            .trim()
-            .toLowerCase();
+          const active =
+            String(cafe["Active"] || "")
+              .trim()
+              .toLowerCase();
 
           if (
             active === "false" ||
@@ -137,42 +149,85 @@
             return;
           }
 
-          const recordId = cafe["Softr Record ID"];
+          const recordId =
+            cafe["Softr Record ID"];
+
+          const slug =
+            String(cafe["SEO Slug"] || "")
+              .trim();
 
           const detailUrl =
             "https://caterina5150.preview.softr.app/item-details?recordId=" +
             encodeURIComponent(recordId);
 
-          const popup = new maplibregl.Popup({
-            offset: 25
-          }).setHTML(`
-            <div class="cafe-name">
-              ${cafe["Name"] || ""}
-            </div>
+          const popup =
+            new maplibregl.Popup({
+              offset: 25
+            }).setHTML(`
+              <div class="cafe-name">
+                ${cafe["Name"] || ""}
+              </div>
 
-            <div class="cafe-area">
-              ${cafe["Neighbourhood"] || ""}
-            </div>
+              <div class="cafe-area">
+                ${cafe["Neighbourhood"] || ""}
+              </div>
 
-            <a
-              class="cafe-link"
-              href="${detailUrl}"
-              target="_top"
-            >
-              View café
-            </a>
-          `);
+              <a
+                class="cafe-link"
+                href="${detailUrl}"
+                target="_top"
+              >
+                View café
+              </a>
+            `);
 
-          new maplibregl.Marker()
-            .setLngLat([
+          const marker =
+            new maplibregl.Marker()
+              .setLngLat([
+                longitude,
+                latitude
+              ])
+              .setPopup(popup)
+              .addTo(map);
+
+          if (
+            requestedCafeSlug &&
+            slug === requestedCafeSlug
+          ) {
+            selectedCafe = {
               longitude,
               latitude
-            ])
-            .setPopup(popup)
-            .addTo(map);
+            };
+
+            selectedPopup = popup;
+          }
         });
 
-        // Resize again after markers are added.
+        // If a café slug was passed in the URL,
+        // zoom to that café and open its popup.
+        if (
+          selectedCafe &&
+          selectedPopup
+        ) {
+          setTimeout(() => {
+            map.flyTo({
+              center: [
+                selectedCafe.longitude,
+                selectedCafe.latitude
+              ],
+              zoom: 15,
+              essential: true
+            });
+
+            selectedPopup
+              .setLngLat([
+                selectedCafe.longitude,
+                selectedCafe.latitude
+              ])
+              .addTo(map);
+          }, 500);
+        }
+
         setTimeout(() => map.resize(), 100);
         setTimeout(() => map.resize(), 500);
         setTimeout(() => map.resize(), 1500);
