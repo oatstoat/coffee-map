@@ -7,6 +7,18 @@
   <title>Oat Milk Coffee Japan</title>
 
   <link
+    rel="preconnect"
+    href="https://tiles.openfreemap.org"
+    crossorigin
+  >
+
+  <link
+    rel="preconnect"
+    href="https://unpkg.com"
+    crossorigin
+  >
+
+  <link
     href="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.css"
     rel="stylesheet"
   >
@@ -23,9 +35,36 @@
       height: 100%;
     }
 
-    #map {
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #map-wrapper {
+      position: relative;
       width: 100%;
       height: 100vh;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    #loading {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #ffffff;
+      color: #555555;
+      font-size: 16px;
+
+      pointer-events: none;
     }
 
     .maplibregl-popup-content {
@@ -55,37 +94,24 @@
 
 <body>
 
-  <div id="map"></div>
+  <div id="map-wrapper">
+    <div id="loading">Loading map…</div>
+    <div id="map"></div>
+  </div>
 
   <script>
-    const map = new maplibregl.Map({
-      container: "map",
-      style: "https://tiles.openfreemap.org/styles/liberty",
-      center: [137.8, 36.1],
-      zoom: 6,
-      fadeDuration: 0
-    });
+    const loading =
+      document.getElementById("loading");
 
-    map.on("load", () => {
-      map.resize();
-
-      setTimeout(() => map.resize(), 250);
-      setTimeout(() => map.resize(), 750);
-      setTimeout(() => map.resize(), 1500);
-      setTimeout(() => map.resize(), 3000);
-    });
-
-    window.addEventListener("resize", () => {
-      map.resize();
-    });
-
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-
-    resizeObserver.observe(
-      document.getElementById("map")
-    );
+    const map =
+      new maplibregl.Map({
+        container: "map",
+        style:
+          "https://tiles.openfreemap.org/styles/liberty",
+        center: [137.8, 36.1],
+        zoom: 6,
+        fadeDuration: 0
+      });
 
     map.addControl(
       new maplibregl.NavigationControl(),
@@ -103,13 +129,16 @@
       "top-right"
     );
 
-    // Read ?cafe=... from the URL
-    const urlParams = new URLSearchParams(
-      window.location.search
-    );
+    const urlParams =
+      new URLSearchParams(
+        window.location.search
+      );
 
     const requestedCafeSlug =
       urlParams.get("cafe");
+
+    let selectedCafe = null;
+    let selectedPopup = null;
 
     Papa.parse("cafes.csv", {
       download: true,
@@ -118,9 +147,6 @@
 
       complete: function(results) {
         const cafes = results.data;
-
-        let selectedCafe = null;
-        let selectedPopup = null;
 
         cafes.forEach(function(cafe) {
           const latitude =
@@ -137,7 +163,9 @@
           }
 
           const active =
-            String(cafe["Active"] || "")
+            String(
+              cafe["Active"] || ""
+            )
               .trim()
               .toLowerCase();
 
@@ -153,12 +181,13 @@
             cafe["Softr Record ID"];
 
           const slug =
-            String(cafe["SEO Slug"] || "")
-              .trim();
+            String(
+              cafe["SEO Slug"] || ""
+            ).trim();
 
-const detailUrl =
-  "https://caterina5150.preview.softr.app/coffee-shops?recordId=" +
-  encodeURIComponent(recordId);
+          const detailUrl =
+            "https://caterina5150.preview.softr.app/coffee-shops?recordId=" +
+            encodeURIComponent(recordId);
 
           const popup =
             new maplibregl.Popup({
@@ -181,14 +210,13 @@ const detailUrl =
               </a>
             `);
 
-          const marker =
-            new maplibregl.Marker()
-              .setLngLat([
-                longitude,
-                latitude
-              ])
-              .setPopup(popup)
-              .addTo(map);
+          new maplibregl.Marker()
+            .setLngLat([
+              longitude,
+              latitude
+            ])
+            .setPopup(popup)
+            .addTo(map);
 
           if (
             requestedCafeSlug &&
@@ -203,34 +231,25 @@ const detailUrl =
           }
         });
 
-        // If a café slug was passed in the URL,
-        // zoom to that café and open its popup.
         if (
           selectedCafe &&
           selectedPopup
         ) {
-          setTimeout(() => {
-            map.flyTo({
-              center: [
-                selectedCafe.longitude,
-                selectedCafe.latitude
-              ],
-              zoom: 15,
-              essential: true
-            });
+          map.jumpTo({
+            center: [
+              selectedCafe.longitude,
+              selectedCafe.latitude
+            ],
+            zoom: 15
+          });
 
-            selectedPopup
-              .setLngLat([
-                selectedCafe.longitude,
-                selectedCafe.latitude
-              ])
-              .addTo(map);
-          }, 500);
+          selectedPopup
+            .setLngLat([
+              selectedCafe.longitude,
+              selectedCafe.latitude
+            ])
+            .addTo(map);
         }
-
-        setTimeout(() => map.resize(), 100);
-        setTimeout(() => map.resize(), 500);
-        setTimeout(() => map.resize(), 1500);
       },
 
       error: function(error) {
@@ -240,6 +259,17 @@ const detailUrl =
         );
       }
     });
+
+    map.once("idle", function() {
+      loading.style.display = "none";
+    });
+
+    window.addEventListener(
+      "resize",
+      function() {
+        map.resize();
+      }
+    );
   </script>
 
 </body>
