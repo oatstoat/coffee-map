@@ -1,6 +1,6 @@
-Name,Neighbourhood,Latitude,Longitude,Active,Softr Record ID
-Foret coffee,Zenkoji!/ Monzen,36.653782,138.187489,True,YRDakZiei39r2v
-Alps coffee lAb.,Nakamachi,36.234132,137.970238,True,xXtbFjQUHOJ1Qc
-ODDO coffee,Nagano Station / Minami-Ishidocho,36.644632,138.186324,True,t5f2lBYlg1OsO7
-Hangout coffee,Honmachi,36.233446,137.968894,True,Ak5tb8pTNb9O6A
-Buthtub,Honmachi,35.359342,136.619383,True,WSvoogHnPyt4Zy
+Name,Neighbourhood,Latitude,Longitude,Active,SEO Slug,Softr Record ID
+Foret coffee,Zenkoji!/ Monzen,36.653782,138.187489,True,foret-coffee-nagano,YRDakZiei39r2v
+Alps coffee lAb.,Nakamachi,36.234132,137.970238,True,alps-coffee-lab-matsumoto,xXtbFjQUHOJ1Qc
+ODDO coffee,Nagano Station / Minami-Ishidocho,36.644632,138.186324,True,oddo-coffee-nagano,t5f2lBYlg1OsO7
+Hangout coffee,Honmachi,36.233446,137.968894,True,hangout-coffee-matsumoto,Ak5tb8pTNb9O6A
+Buthtub,Honmachi,35.359342,136.619383,True,buthtub-ogaki,WSvoogHnPyt4Zy
